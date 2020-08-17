@@ -216,8 +216,12 @@ export class FaceComparisonResult {
 function decodeResult<T>(callback: (result?: T) => void) {
     return function(encoded?: string) {
         if (encoded) {
-            var decoded = JSON.parse(encoded);
-            callback(decoded);
+            if (typeof encoded === 'string') {
+                var decoded = JSON.parse(encoded);
+                callback(decoded);
+            } else {            
+                callback(encoded);
+            }
         } else {
             callback();
         }
@@ -308,7 +312,7 @@ export class VerID {
 
 /**
  * Load Ver-ID
- * @param apiSecret Ver-ID API secret (if omitted the library will look in the app's plist (iOS) or manifest (Android))
+ * @param password Ver-ID API password (if omitted the library will look in the app's plist (iOS) or manifest (Android))
  * @returns Promise whose resolve function's argument contains the loaded Ver-ID instance
  * @example
  * ```typescript
@@ -320,11 +324,11 @@ export class VerID {
  * });
  * ```
  */
-export function load(apiSecret?: string): Promise<VerID> {
+export function load(password?: string): Promise<VerID> {
     return new Promise<VerID>((resolve, reject) => {
         var options = [];
-        if (apiSecret != undefined) {
-            options.push({"apiSecret": apiSecret});
+        if (password != undefined) {
+            options.push({"password": password});
         }
         cordova.exec(function(){
             var verid = new VerID();
@@ -340,5 +344,18 @@ export function load(apiSecret?: string): Promise<VerID> {
 export function unload(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         cordova.exec(resolve, reject, PLUGIN_NAME, "unload", []);
+    });
+}
+/**
+ * Set testing mode
+ * @param mode used to set the testing mode on or off
+ */
+export function setTestingMode(mode: boolean): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        if (typeof mode === "boolean") {
+            cordova.exec(resolve, reject, PLUGIN_NAME, "setTestingMode", [mode]);
+        } else {
+            reject('Invalid Parameter');
+        }
     });
 }
